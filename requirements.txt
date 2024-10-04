@@ -1,4 +1,4 @@
 Flask==2.3.2
-torch==2.4.1  # Use a versão mais recente disponível
-torchvision==0.15.2  # Compatível com a versão mais recente do torch
+torch==2.4.1  # Versão mais recente disponível
+torchvision==0.19.1  # Compatível com a versão mais recente do torch
 Pillow==10.0.1
