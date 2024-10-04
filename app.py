@@ -1,11 +1,13 @@
-
-import io
-import json
-from torchvision import models
+# Importação de bibliotecas
+import io   # Utilizado para manipulação de fluxos de dados, neste caso, para carregar imagem como bytes
+import json # Carrega o arquivo de mapeamento de classes do ImageNet, que contém os nomes das classes para a previsão
+import requests
+from torchvision import models  # Contém modelos pré-treinados como DenseNet, que é usado para fazer previsões em imagens
 from flask import Flask, jsonify, render_template, request
-import torchvision.transforms as transforms 
-from PIL import Image   
+import torchvision.transforms as transforms # Utilizado para aplicar transformações nas imagens, para serem usadas pelo modelo
+from PIL import Image   # Biblioteca para carregar e manipular imagens
 
+# Configuração da aplicação Flask
 app = Flask(__name__)
 imagenet_class_index = json.load(open('imagenet_class_index.json'))
 model = models.densenet121(pretrained=True)
@@ -45,5 +47,30 @@ def predict():
         return jsonify({'class_id': class_id, 'class_name': class_name})
     
     
+# Novo endpoint para upload via URL
+@app.route('/predict-url', methods=['POST'])
+def predict_url():
+    if request.method == 'POST':
+        # Recebe a URL da imagem
+        data = request.get_json()
+        img_url = data.get('url')
+        
+        # Verifica se a URL foi enviada
+        if not img_url:
+            return jsonify({'error': 'URL da imagem não fornecida'}), 400
+        
+        try:
+            # Faz o download da imagem
+            response = requests.get(img_url)
+            img_bytes = response.content
+            
+            # Processa a imagem e faz a predição
+            class_id, class_name = get_prediction(image_bytes=img_bytes)
+            return jsonify({'class_id': class_id, 'class_name': class_name})
+        
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+    
+    
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8080)
+    app.run(debug=True)
