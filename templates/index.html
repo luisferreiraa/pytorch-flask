@@ -7,19 +7,31 @@
 </head>
 <body>
     <h1>Upload an Image for Classification</h1>
+    
+    <!-- Formulário para upload de arquivo -->
     <form id="upload-form" enctype="multipart/form-data">
+        <label for="file-input">Choose an image file:</label>
         <input type="file" id="file-input" name="file" accept="image/*" required>
         <button type="submit">Upload Image</button>
+    </form>
+
+    <!-- Formulário para enviar URL da imagem -->
+    <h2>Or Enter Image URL for Classification</h2>
+    <form id="url-form">
+        <label for="image-url">Enter Image URL:</label>
+        <input type="text" id="image-url" name="url" placeholder="https://example.com/image.jpg" required>
+        <button type="submit">Submit URL</button>
     </form>
 
     <h2>Prediction Result:</h2>
     <p id="result"></p>
 
     <script>
-        const form = document.getElementById('upload-form');
+        // Função para upload de imagem por arquivo
+        const uploadForm = document.getElementById('upload-form');
         const result = document.getElementById('result');
 
-        form.addEventListener('submit', async (event) => {
+        uploadForm.addEventListener('submit', async (event) => {
             event.preventDefault();
             const fileInput = document.getElementById('file-input');
             const formData = new FormData();
@@ -29,6 +41,33 @@
                 const response = await fetch('/predict', {
                     method: 'POST',
                     body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error('Prediction failed');
+                }
+
+                const data = await response.json();
+                result.textContent = `Class: ${data.class_name} (ID: ${data.class_id})`;
+            } catch (error) {
+                result.textContent = 'Error: ' + error.message;
+            }
+        });
+
+        // Função para envio de URL da imagem
+        const urlForm = document.getElementById('url-form');
+
+        urlForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const imageUrl = document.getElementById('image-url').value;
+
+            try {
+                const response = await fetch('/predict-url', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ url: imageUrl }),
                 });
 
                 if (!response.ok) {
